@@ -1,9 +1,12 @@
-README
+# ENEE447 2023 Spring Project 1
 
-This sample demonstrates the optional cooperative non-preemtive scheduler which is available in Circle. The scheduler allows to have several independent threads of execution in a Circle application which may ease the programming model.
+## What are we doing in this project
+- We will modify the scheduler in circle so that it implements priority scheduling
+	- Currently, the scheduler is a ["cooperative non-preemtive scheduler that uses the round-robin policy, without priorities"](https://github.com/sklaw/circle/blob/master/include/circle/sched/scheduler.h#L31-L33).
+		- What is a cooperative non-preemtive scheduler? Read this wikipedia on [cooperative multitasking](https://en.wikipedia.org/wiki/Cooperative_multitasking).
+	- We want to modify it so that it will prioritize scheduling tasks with highest priority.
 
-The sample first blinks 5 times to show the image was loaded right. After initializing the 4 screen tasks and a LED task is started in CKernel::Run(). The screen tasks display their task ID on screen when they are running. The LED task blinks the Act LED. The main task runs in CKernel::Run() and displays "Main" on the screen. The tasks are running differently often because their sleeping duration is different.
-
-There is another task started which calculates all prime numbers until 100 million. It uses the "Sieve of Eratosthenes" algorithm and displays the largest calculated number when it completes calculation. While the calculation is running the method CScheduler::Yield() is called from time to time so that the other tasks are able to run.
-
-In the main task there is also demonstrated how a task can be made waiting for an event and resume again (in this case when a kernel timer elapses) using the CSynchronizationEvent class.
+## How to test your solution
+- Make and run [this sample](https://github.com/sklaw/circle/tree/master/sample/43_ENEE447Project1) on your Raspberry Pi.
+- Originally, the three types of tasks (CScreenTask, CPrimeTask, CLEDTask) [here](https://github.com/sklaw/circle/blob/master/sample/43_ENEE447Project1/kernel.cpp#L84-L94) will run parallelly.
+- After you implements prioritize scheduling, they should run serially in this order: CScreenTask->CPrimeTask->CLEDTask.
