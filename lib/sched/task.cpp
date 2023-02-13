@@ -52,7 +52,10 @@ CTask::CTask (unsigned nStackSize, boolean bCreateSuspended)
 
 	priority = 0; // Added by TA: by default, a task's priority is 0.
 
-	CScheduler::Get ()->AddTask (this);
+	CScheduler::Get ()->AddTask (this); 
+	// NOTE: This line tells you, 
+	//  when a task is created, implicitly, it will
+	//  be added to the queue of CPU scheduler.
 }
 
 CTask::~CTask (void)

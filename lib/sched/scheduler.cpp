@@ -366,6 +366,9 @@ void CScheduler::WakeTasks (CTask **ppWaitListHead)
 	m_SpinLock.Release ();
 }
 
+// You need to modify this function so that
+// 	it looks at the priorities of all ready tasks
+//  then returns the one with highest priority
 unsigned CScheduler::GetNextTask (void)
 {
 	unsigned nTask = m_nCurrent < MAX_TASKS ? m_nCurrent : 0;
