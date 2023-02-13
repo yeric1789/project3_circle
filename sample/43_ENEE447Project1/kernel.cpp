@@ -90,8 +90,8 @@ TShutdownMode CKernel::Run (void)
 	auto t = new CPrimeTask (&m_Screen);
 	t->SetTaskPriority(20);
 
-	new CLEDTask (&m_ActLED);
-	t->SetTaskPriority(10);
+	auto t2 = new CLEDTask (&m_ActLED);
+	t2->SetTaskPriority(10);
 
 	// the main task
 	while (1)
