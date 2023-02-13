@@ -89,6 +89,9 @@ public:
 	/// \return Any user pointer, previously set with SetUserData()
 	void *GetUserData (unsigned nSlot);
 
+	// Added by TA.
+	void SetTaskPriority(int taskPriority);
+
 private:
 	TTaskState GetState (void) const	{ return m_State; }
 	void SetState (TTaskState State)	{ m_State = State; }
@@ -116,6 +119,8 @@ private:
 	void		   *m_pUserData[TASK_USER_DATA_SLOTS];
 	CSynchronizationEvent m_Event;
 	CTask		   *m_pWaitListNext;	// next in list of tasks waiting on an event
+
+	int priority;
 };
 
 #endif

@@ -50,6 +50,8 @@ CTask::CTask (unsigned nStackSize, boolean bCreateSuspended)
 
 	m_Name.Format ("@%lp", this);
 
+	priority = 0; // Added by TA: by default, a task's priority is 0.
+
 	CScheduler::Get ()->AddTask (this);
 }
 
@@ -180,4 +182,9 @@ void CTask::TaskEntry (void *pParam)
 	CScheduler::Get ()->Yield ();
 
 	assert (0);
+}
+
+
+void CTask::SetTaskPriority(int taskPriority) {
+	priority = taskPriority;
 }
