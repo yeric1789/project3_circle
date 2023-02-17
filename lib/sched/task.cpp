@@ -191,3 +191,7 @@ void CTask::TaskEntry (void *pParam)
 void CTask::SetTaskPriority(int taskPriority) {
 	priority = taskPriority;
 }
+
+int CTask::GetTaskPriority(void) const {
+	return priority;
+}

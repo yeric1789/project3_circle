@@ -91,6 +91,7 @@ public:
 
 	// Added by TA.
 	void SetTaskPriority(int taskPriority);
+	int GetTaskPriority(void) const;
 
 private:
 	TTaskState GetState (void) const	{ return m_State; }
