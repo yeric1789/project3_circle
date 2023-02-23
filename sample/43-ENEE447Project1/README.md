@@ -45,7 +45,9 @@
 	- A new Window should pop up which emulates the code running on Raspberry Pi Zero.
 
 ### 2. How do I run this sample on my Raspberry Pi?
-- Follow these [instructions](https://github.com/sklaw/circle#installation).
+- First, [follow these instructions to build a `kernel*.img` file for your version of Pi](https://github.com/sklaw/circle#building)
+- Then, [follow these instructions to copy firware files and the `kernel*.img` file to your FAT-formatted SD card](https://github.com/sklaw/circle#installation).
+- Then, insert the SD card into your Pi, connect your Pi's HDMI port to a external monitor, then power on your Pi. 
 
 ### 3. After I modify some codes, how do I compile and get the latest kernel?
 - If you have modified source codes of the library (any code in `lib` or `include`), run `./makeall clean && ./makeall`.
