@@ -6,16 +6,9 @@
 		- What is a cooperative non-preemtive scheduler? Read this wikipedia on [cooperative multitasking](https://en.wikipedia.org/wiki/Cooperative_multitasking).
 	- We want to modify it so that it will prioritize scheduling tasks with highest priority.
 
-## How to test your solution
-
-- ~~Make and run [this sample](https://github.com/sklaw/circle/tree/master/sample/43_ENEE447Project1) on your Raspberry Pi.~~
-
-- ~~Originally, the three types of tasks (CScreenTask, CPrimeTask, CLEDTask) [here](https://github.com/sklaw/circle/blob/master/sample/43-ENEE447Project1/kernel.cpp#L84-L94) will run parallelly.~~
-
-- ~~After you implement priority scheduling, they should run serially in this order: CScreenTask->CPrimeTask->CLEDTask.~~
-	- It turns out it is not easy to test priority scheduling using the three tasks in the sample because two of them (CScreenTask and CLEDTask) run forever and sleep for the most of time. 
-	- **As an additional challenge in this project, you need to design a test for your implementation of priority scheduling.** 
-	- (TAs will have some undisclosed tests for testing your code).
+## How to test your solution 
+- **As an additional challenge in this project, you need to design a test for your implementation of priority scheduling.** (TAs will have some undisclosed tests for testing your code).
+- Hint: The test can be developed based on the codes we already have in this sample. Specifically, you can modify the `Run` functions of [CScreenTask](screentask.cpp#L34-L51)/[CPrimeTask](primetask.cpp#L42-L84)/[CLEDTask](ledtask.cpp#L32-L47), then [create them in kernel.cpp with different priorities](kernel.cpp#L84-L94), then run the sample, then check the output to see whether those tasks are run from high priority to low priority.
 
 ## What to submit on ELMS before your lab in the week of Feb 27:
 1. A pdf that has:
