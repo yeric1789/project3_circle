@@ -10,6 +10,17 @@
 - **As an additional challenge in this project, you need to design a test for your implementation of priority scheduling.** (TAs will have some undisclosed tests for testing your code).
 - Hint: The test can be developed based on the codes we already have in this sample. Specifically, you can modify the `Run` functions of [CScreenTask](screentask.cpp#L34-L51)/[CPrimeTask](primetask.cpp#L42-L84)/[CLEDTask](ledtask.cpp#L32-L47), then [create them in kernel.cpp with different priorities](kernel.cpp#L84-L94), then run the sample, then check the output to see whether those tasks are run from high priority to low priority.
 
+### How to "run" a task?
+- You may notice that every task defined here has a `Run` function, **does that mean we need to call a task's `Run` function ourselves to run the task? No.**
+- Here is how a task starts running:
+	- When we create an instance of a task, we will call `CTask`'s constructor because all tasks are subclasses of CTask. 
+		- For example, [`CScreenTask` inherits `CTask` and thus is a subclass of `CTask`](screentask.h#L26).
+	- [`CTask`'s constructor will call `InitializeRegs`](../../lib/sched/task.cpp#L48).
+	- [`InitializeRegs` will initialize a task's `lr` register to point to `TaskEntry`](../..//lib/sched/task.cpp#L148).
+		- **NOTE: This means when the scheduler schedules this task for the first time, the task will start running at `TaskEntry`.**
+	- [`TaskEntry` will call the task's `Run` function](../..//lib/sched/task.cpp#L181).
+		- Moreover, when the `Run` function returns, meaning the task is done, [`TaskEntry` will clean up the task by setting its state to `TaskStateTerminated` and yield to next task](../..//lib/sched/task.cpp#L183-L185).
+
 ## What to submit on ELMS before your lab in the week of Feb 27:
 1. A pdf that has:
 	- Members of your group.
