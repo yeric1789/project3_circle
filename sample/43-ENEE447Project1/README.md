@@ -46,7 +46,7 @@
 
 ### 2. How do I run this sample on my Raspberry Pi?
 - First, [follow these instructions to build a `kernel*.img` file for your version of Pi](https://github.com/sklaw/circle#building)
-- Then, [follow these instructions to copy firware files and the `kernel*.img` file to your FAT-formatted SD card](https://github.com/sklaw/circle#installation).
+- Then, [follow these instructions to copy firmware files and the `kernel*.img` file to your FAT-formatted SD card](https://github.com/sklaw/circle#installation).
 - Then, insert the SD card into your Pi, connect your Pi's HDMI port to a external monitor, then power on your Pi. 
 
 ### 3. After I modify some codes, how do I compile and get the latest kernel?
