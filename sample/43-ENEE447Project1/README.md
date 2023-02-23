@@ -17,7 +17,7 @@
 		- For example, [`CScreenTask` inherits `CTask` and thus is a subclass of `CTask`](screentask.h#L26).
 	- [`CTask`'s constructor will call `InitializeRegs`](../../lib/sched/task.cpp#L48).
 		- [`InitializeRegs` will initialize a task's `lr` register to point to `TaskEntry`](../..//lib/sched/task.cpp#L148).
-			- **NOTE: This means when the scheduler schedules this task for the first time, the task will start running at `TaskEntry`.**
+			- **NOTE: This means when the scheduler schedules this task to run for the first time, the task will start running at `TaskEntry`.**
 		- When scheduled to run, [`TaskEntry` will call the task's `Run` function](../..//lib/sched/task.cpp#L181).
 			- Moreover, when the `Run` function returns, meaning the task is done, [`TaskEntry` will clean up the task by setting its state to `TaskStateTerminated` and yield to next task](../..//lib/sched/task.cpp#L183-L185).
 	- [`Ctask`'s constructor will add the task to the scheduler](../..//lib/sched/task.cpp#L55) so that the task will be considered in future scheduling.
