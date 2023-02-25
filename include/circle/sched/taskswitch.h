@@ -29,11 +29,21 @@ extern "C" {
 
 #if AARCH == 32
 
+// Compared to project 1, TTaskRegisters in project 2 needs to include
+//   more registers because context switch is no longer triggered by a
+//   Yield call made from a task (in which case the task itself would've 
+//   already saved the caller-saved registers so we don't need to) but
+//   triggered by a timer interrupt that could interrupt the task at
+//   any time.
 struct TTaskRegisters
 {
-	u32	r0;
 	u32	fpexc;
 	u32	fpscr;
+	u64	d[16];
+	u32	r0;
+	u32	r1;
+	u32	r2;
+	u32	r3;
 	u32	r4;
 	u32	r5;
 	u32	r6;
@@ -43,9 +53,9 @@ struct TTaskRegisters
 	u32	r10;
 	u32	r11;
 	u32	r12;
-	u32	sp;
-	u32	lr;
-	u64	d[16];
+	u32	sp; // r13
+	u32	lr; // r14
+	u32	pc; // r15
 }
 PACKED;
 

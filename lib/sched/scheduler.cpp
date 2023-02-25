@@ -54,6 +54,10 @@ CScheduler::~CScheduler (void)
 
 void CScheduler::Yield (void)
 {
+	// Cooperative multitasking is disabled for project 2 because it requires
+	//   extra effort to make it compatible with preemptive multitasking
+
+	/*
 	while ((m_nCurrent = GetNextTask ()) == MAX_TASKS)	// no task is ready
 	{
 		assert (m_nTasks > 0);
@@ -79,6 +83,7 @@ void CScheduler::Yield (void)
 	assert (pOldRegs != 0);
 	assert (pNewRegs != 0);
 	TaskSwitch (pOldRegs, pNewRegs);
+	*/
 }
 
 void CScheduler::Sleep (unsigned nSeconds)
@@ -439,4 +444,53 @@ CScheduler *CScheduler::Get (void)
 {
 	assert (s_pThis != 0);
 	return s_pThis;
+}
+
+int should_contextswith_on_irq_return;
+unsigned timertick_of_last_contextswitch;
+
+void a_simple_timer_interrupt_handler(void) {
+	unsigned current_timertick = CTimer::Get()->GetTicks();
+	if (current_timertick - timertick_of_last_contextswitch >=  HZ) {
+		// If the interrupted task has used up its CPU time slice,
+		//   do a context switch.
+		should_contextswith_on_irq_return = 1;
+		timertick_of_last_contextswitch = current_timertick;
+	}
+	else {
+		should_contextswith_on_irq_return = 0;
+	}
+}
+
+
+void CScheduler::EnablePreemptiveMultitasking() {
+	#if RASPPI != 1
+	#error "This implementation of preemptive multitasking only works for RASPPI==1!"
+	#endif
+	#if AARCH != 32
+	#error "This implementation of preemptive multitasking only works for 32-bit ARM!"
+	#endif
+	#ifdef ARM_ALLOW_MULTI_CORE
+	#error "This implementation of preemptive multitasking only works for single-core CPU!"
+	#endif
+
+	should_contextswith_on_irq_return = 0;
+	timertick_of_last_contextswitch = CTimer::Get()->GetTicks();
+	CTimer::Get()->RegisterPeriodicHandler(a_simple_timer_interrupt_handler);
+}
+
+void ContextSwitchOnIrqReturn_by_modifyingTaskContextSavedByIrqStub(TTaskRegisters* regs_saved_by_irq_stub) {
+	should_contextswith_on_irq_return = 0;
+	CScheduler* scheduler = CScheduler::Get();
+	CTask *pNext = scheduler->m_pCurrent;
+
+	// TODO: You should borrow all codes form Yield but make the following changes:
+	//   1. Use the variable `scheduler` above to fix any compilation errors.
+	//   2. At the end, **DO NOT** just call `TaskSwitch`. Instead, think about
+	//     how this function is supposed to assist the context switch in IRQStub (after you have
+	//     fully understood how IRQStub performs context switch), then write code here to
+	//     make the function do exactly what it is supposed to do.
+
+	CLogger::Get ()->Write (FromScheduler, LogDebug, "Current task is task %s, will switch to task %s.\n", scheduler->m_pCurrent->GetName(), pNext->GetName());
+
 }

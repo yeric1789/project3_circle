@@ -26,6 +26,9 @@
 #include <circle/string.h>
 #include <circle/types.h>
 
+// Added by TA for implementing preemptive multitasking.
+extern "C" void ContextSwitchOnIrqReturn_by_modifyingTaskContextSavedByIrqStub(TTaskRegisters* regs_saved_by_irq_stub);
+
 enum TTaskState
 {
 	TaskStateNew,
@@ -116,6 +119,9 @@ private:
 	void		   *m_pUserData[TASK_USER_DATA_SLOTS];
 	CSynchronizationEvent m_Event;
 	CTask		   *m_pWaitListNext;	// next in list of tasks waiting on an event
+
+	// Added by TA so that the function can access all member functions and variables of CScheduler
+	friend void ContextSwitchOnIrqReturn_by_modifyingTaskContextSavedByIrqStub(TTaskRegisters* regs_saved_by_irq_stub);
 };
 
 #endif

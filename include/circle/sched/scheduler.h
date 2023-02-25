@@ -28,6 +28,10 @@
 
 typedef void TSchedulerTaskHandler (CTask *pTask);
 
+// Added by TA for implementing preemptive multitasking.
+extern int do_contextswith_on_irq_return;
+extern "C" void ContextSwitchOnIrqReturn_by_modifyingTaskContextSavedByIrqStub(TTaskRegisters* regs_saved_by_irq_stub);
+
 /// \note This scheduler uses the round-robin policy, without priorities.
 
 class CScheduler /// Cooperative non-preemtive scheduler, which controls which task runs at a time
@@ -88,6 +92,8 @@ public:
 		return s_pThis != 0 ? TRUE : FALSE;
 	}
 
+	// Added by TA for implementing preemptive multitasking.
+	void EnablePreemptiveMultitasking();
 private:
 	void AddTask (CTask *pTask);
 	friend class CTask;
@@ -114,6 +120,9 @@ private:
 	CSpinLock m_SpinLock;
 
 	static CScheduler *s_pThis;
+
+	// Added by TA so that the function can access all member functions and variables of CScheduler
+	friend void ContextSwitchOnIrqReturn_by_modifyingTaskContextSavedByIrqStub(TTaskRegisters* regs_saved_by_irq_stub);
 };
 
 #endif

@@ -140,12 +140,12 @@ void CTask::InitializeRegs (void)
 	assert (m_pStack != 0);
 	m_Regs.sp = (u32) m_pStack + m_nStackSize;
 
-	m_Regs.lr = (u32) &TaskEntry;
-
-#define VFP_FPEXC_EN	(1 << 30)
+#define VFP_FPEXC_EN   (1 << 30)
 	m_Regs.fpexc = VFP_FPEXC_EN;
-#define VFP_FPSCR_DN	(1 << 25)	// enable Default NaN mode
+#define VFP_FPSCR_DN   (1 << 25)       // enable Default NaN mode
 	m_Regs.fpscr = VFP_FPSCR_DN;
+
+	m_Regs.pc = (u32) &TaskEntry;
 }
 
 #else
