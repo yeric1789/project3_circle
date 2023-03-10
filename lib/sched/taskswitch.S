@@ -23,18 +23,24 @@
 #if AARCH == 32
 
 	.globl	TaskSwitch
-TaskSwitch:					/* r0: pOldRegs, r1: pNewRegs */
-	vmrs	r2, fpexc
-	vmrs	r3, fpscr
-	stmia	r0!, {r0, r2-r14}
-	vstmia	r0, {d0-d15}
-
-	ldmia	r1!, {r0, r2-r14}
-	vmsr	fpexc, r2
-	vmsr	fpscr, r3
-	vldmia	r1, {d0-d15}
-
+TaskSwitch:
+	// TODO: delete the instruction below: 
 	bx	lr
+
+	// TODO: Implement `TaskSwitch`
+	// Hint: 
+	// We actually don't need to write a lot of codes here because 
+	// a working design of context switch has been implemented in 
+	// project 2 (See `__contextswitch_impl` in `lib/exceptionstub.S`).
+	// 
+	// However, we cannot just jump to `__contextswitch_impl` here because
+	// some assumptions held by `__contextswitch_impl` are not satisfied yet.
+	//
+	// Therefore, we need to do the following:
+	//	- Identify what assumptions held by `__contextswitch_impl` must 
+	// 	  be satisfied before we jump to `__contextswitch_impl`.
+	//	- Write codes here so that the assumptions are satisfied.
+	//	- Jump to __contextswitch_impl.
 
 #else
 

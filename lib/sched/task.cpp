@@ -56,8 +56,8 @@ CTask::CTask (unsigned nStackSize, boolean bCreateSuspended)
 CTask::~CTask (void)
 {
 	assert (m_State == TaskStateTerminated);
-	m_State = TaskStateUnknown;
 
+	m_State = TaskStateUnknown;
 	delete [] m_pStack;
 	m_pStack = 0;
 }
@@ -90,6 +90,7 @@ void CTask::Run (void)		// dummy method which is never called
 void CTask::Terminate (void)
 {
 	m_State = TaskStateTerminated;
+
 	m_Event.Set ();
 	CScheduler::Get ()->Yield ();
 
@@ -178,6 +179,7 @@ void CTask::TaskEntry (void *pParam)
 	pThis->Run ();
 
 	pThis->m_State = TaskStateTerminated;
+
 	pThis->m_Event.Set ();
 	CScheduler::Get ()->Yield ();
 

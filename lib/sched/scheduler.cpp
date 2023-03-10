@@ -23,6 +23,7 @@
 #include <circle/string.h>
 #include <circle/util.h>
 #include <assert.h>
+#include <circle/synchronize.h>
 
 static const char FromScheduler[] = "sched";
 
@@ -36,12 +37,16 @@ CScheduler::CScheduler (void)
 	m_pTaskTerminationHandler (0),
 	m_iSuspendNewTasks (0)
 {
+	for (unsigned i = 0; i <MAX_TASKS; i++) {
+		m_pTask[i] = 0;
+	}
+
 	assert (s_pThis == 0);
 	s_pThis = this;
 
 	m_pCurrent = new CTask (0);		// main task currently running
 	assert (m_pCurrent != 0);
-	m_pCurrent->SetName ("main");
+	m_pCurrent->SetName("Main");
 }
 
 CScheduler::~CScheduler (void)
@@ -54,36 +59,7 @@ CScheduler::~CScheduler (void)
 
 void CScheduler::Yield (void)
 {
-	// Cooperative multitasking is disabled for project 2 because it requires
-	//   extra effort to make it compatible with preemptive multitasking
-
-	/*
-	while ((m_nCurrent = GetNextTask ()) == MAX_TASKS)	// no task is ready
-	{
-		assert (m_nTasks > 0);
-	}
-
-	assert (m_nCurrent < MAX_TASKS);
-	CTask *pNext = m_pTask[m_nCurrent];
-	assert (pNext != 0);
-	if (m_pCurrent == pNext)
-	{
-		return;
-	}
-	
-	TTaskRegisters *pOldRegs = m_pCurrent->GetRegs ();
-	m_pCurrent = pNext;
-	TTaskRegisters *pNewRegs = m_pCurrent->GetRegs ();
-
-	if (m_pTaskSwitchHandler != 0)
-	{
-		(*m_pTaskSwitchHandler) (m_pCurrent);
-	}
-
-	assert (pOldRegs != 0);
-	assert (pNewRegs != 0);
-	TaskSwitch (pOldRegs, pNewRegs);
-	*/
+	TaskSwitch ();
 }
 
 void CScheduler::Sleep (unsigned nSeconds)
@@ -122,6 +98,8 @@ void CScheduler::usSleep (unsigned nMicroSeconds)
 		m_pCurrent->SetState (TaskStateSleeping);
 
 		Yield ();
+
+		assert (m_pCurrent->GetState () == TaskStateReady);
 	}
 }
 
@@ -153,8 +131,9 @@ boolean CScheduler::IsValidTask (CTask *pTask)
 	unsigned i;
 	for (i = 0; i < m_nTasks; i++)
 	{
-		if (m_pTask[i] != 0 && m_pTask[i] == pTask)
+		if (m_pTask[i] != 0 && m_pTask[i] == pTask) {
 			return TRUE;
+		}
 	}
 
 	return FALSE;
@@ -241,13 +220,11 @@ void CScheduler::AddTask (CTask *pTask)
 		pTask->SetState(TaskStateNew);
 	}
 
-	unsigned i;
-	for (i = 0; i < m_nTasks; i++)
+	for (unsigned i = 0; i < m_nTasks; i++)
 	{
 		if (m_pTask[i] == 0)
 		{
 			m_pTask[i] = pTask;
-
 			return;
 		}
 	}
@@ -258,26 +235,6 @@ void CScheduler::AddTask (CTask *pTask)
 	}
 
 	m_pTask[m_nTasks++] = pTask;
-}
-
-void CScheduler::RemoveTask (CTask *pTask)
-{
-	for (unsigned i = 0; i < m_nTasks; i++)
-	{
-		if (m_pTask[i] == pTask)
-		{
-			m_pTask[i] = 0;
-
-			if (i == m_nTasks-1)
-			{
-				m_nTasks--;
-			}
-
-			return;
-		}
-	}
-
-	assert (0);
 }
 
 boolean CScheduler::BlockTask (CTask **ppWaitListHead, unsigned nMicroSeconds)
@@ -333,8 +290,11 @@ boolean CScheduler::BlockTask (CTask **ppWaitListHead, unsigned nMicroSeconds)
 
 	m_SpinLock.Release ();
 
+
 	// GetWakeTicks Will be zero if timeout expired, non-zero if event signalled
-	return m_pCurrent->GetWakeTicks() == 0;		
+	bool ret = m_pCurrent->GetWakeTicks() == 0;
+
+	return ret;
 }
 
 void CScheduler::WakeTasks (CTask **ppWaitListHead)
@@ -373,6 +333,62 @@ void CScheduler::WakeTasks (CTask **ppWaitListHead)
 
 unsigned CScheduler::GetNextTask (void)
 {
+	// Added by TA: Making sure no active task is mistakenly considered removed.
+	for (unsigned i = m_nTasks; i <MAX_TASKS; i++) {
+		if (m_pTask[i] != 0) {
+			CString Source;
+			Source.Format ("%s(%u)", __FILE__, __LINE__);
+			CLogger::Get ()->Write (Source, LogPanic, "A removed task is actually not removed! This would lead to memory leak!");
+		}
+	}
+
+	// Added by TA: Remove all terminated tasks.
+	int removed_count = 0;
+	for (unsigned i = 0; i < m_nTasks; i++)
+	{
+		CTask *pTask = m_pTask[i];
+		if (pTask == 0)
+		{
+			continue;
+		}
+		if (pTask->GetState() == TaskStateTerminated) {
+			if (pTask == m_pCurrent) {
+				continue;
+			}
+			if (m_pTaskTerminationHandler != 0)
+			{
+				(*m_pTaskTerminationHandler) (pTask);
+			}
+			m_pTask[i] = 0;
+			delete pTask;
+			removed_count++;
+		}
+	}
+	// CLogger::Get ()->Write (FromScheduler, LogDebug, "Removed %d tasks.", removed_count);
+
+	// Added by TA: Compact the task array if more than half of the tasks were removed
+	if (removed_count >= m_nTasks/2) {
+		int task_count = 0;
+		for (unsigned i = 0; i < m_nTasks; i++)
+		{
+			CTask *pTask = m_pTask[i];
+			if (pTask == 0)
+			{
+				continue;
+			}
+			m_pTask[task_count] = m_pTask[i];
+			if (task_count != i) {
+				m_pTask[i] = 0;
+			}
+			if (i == m_nCurrent) {
+				m_nCurrent = task_count;
+			}
+			task_count++;
+		}
+		m_nTasks = task_count;
+	}
+	// CLogger::Get ()->Write (FromScheduler, LogDebug, "There are now %d tasks in the task array.", m_nTasks);
+
 	unsigned nTask = m_nCurrent < MAX_TASKS ? m_nCurrent : 0;
 
 	unsigned nTicks = CTimer::Get ()->GetClockTicks ();
@@ -388,6 +404,21 @@ unsigned CScheduler::GetNextTask (void)
 		if (pTask == 0)
 		{
 			continue;
+		}
+		
+		auto pRegs = pTask->GetRegs();
+		if ((void *)(pRegs->pc) == (void *)(&(CTask::TaskEntry))) {
+			typedef void (CTask::*pmf)(void);
+			typedef void (*fptr)(CTask *);
+
+			pmf vfun_Run = &CTask::Run;
+			fptr p1 = (fptr)(&CTask::Run);
+			fptr p2 = (fptr)(pTask->*vfun_Run);
+
+			if (p1 == p2) {
+				// CLogger::Get ()->Write (FromScheduler, LogDebug, "Task %s is partially initialized. Will skip it.", pTask->GetName());
+				continue;
+			}
 		}
 
 		if (pTask->IsSuspended ())
@@ -423,14 +454,11 @@ unsigned CScheduler::GetNextTask (void)
 			return nTask;
 
 		case TaskStateTerminated:
-			if (m_pTaskTerminationHandler != 0)
-			{
-				(*m_pTaskTerminationHandler) (pTask);
+			// All terminated tasks except current task should've been removed.
+			if (pTask != m_pCurrent) {
+				assert (0);
 			}
-			RemoveTask (pTask);
-			delete pTask;
-			return MAX_TASKS;
-
+			break;
 		default:
 			assert (0);
 			break;
@@ -451,7 +479,7 @@ unsigned timertick_of_last_contextswitch;
 
 void a_simple_timer_interrupt_handler(void) {
 	unsigned current_timertick = CTimer::Get()->GetTicks();
-	if (current_timertick - timertick_of_last_contextswitch >=  HZ) {
+	if (current_timertick - timertick_of_last_contextswitch >=  1) {
 		// If the interrupted task has used up its CPU time slice,
 		//   do a context switch.
 		should_contextswith_on_irq_return = 1;
@@ -480,17 +508,8 @@ void CScheduler::EnablePreemptiveMultitasking() {
 }
 
 void ContextSwitchOnIrqReturn_by_modifyingTaskContextSavedByIrqStub(TTaskRegisters* regs_saved_by_irq_stub) {
-	should_contextswith_on_irq_return = 0;
-	CScheduler* scheduler = CScheduler::Get();
-	CTask *pNext = scheduler->m_pCurrent;
-
-	// TODO: You should borrow all codes form Yield but make the following changes:
-	//   1. Use the variable `scheduler` above to fix any compilation errors.
-	//   2. At the end, **DO NOT** just call `TaskSwitch`. Instead, think about
-	//     how this function is supposed to assist the context switch in IRQStub (after you have
-	//     fully understood how IRQStub performs context switch), then write code here to
-	//     make the function do exactly what it is supposed to do.
-
-	CLogger::Get ()->Write (FromScheduler, LogDebug, "Current task is task %s, will switch to task %s.\n", scheduler->m_pCurrent->GetName(), pNext->GetName());
+	// TODO: Copy your working project 2 solution to here
+	// (TAs will publish project 2 solution later after 
+	// all lab sections have concluded project 2)
 
 }

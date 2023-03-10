@@ -32,6 +32,12 @@ typedef void TSchedulerTaskHandler (CTask *pTask);
 extern int do_contextswith_on_irq_return;
 extern "C" void ContextSwitchOnIrqReturn_by_modifyingTaskContextSavedByIrqStub(TTaskRegisters* regs_saved_by_irq_stub);
 
+extern struct TTaskRegisters *old_regs_debug;
+extern struct TTaskRegisters *new_regs_debug;
+extern "C" void debug_PrintRegs(struct TTaskRegisters *regs);
+extern "C" void debug_PrintOldRegs();
+extern "C" void debug_PrintNewRegs();
+
 /// \note This scheduler uses the round-robin policy, without priorities.
 
 class CScheduler /// Cooperative non-preemtive scheduler, which controls which task runs at a time
@@ -102,7 +108,6 @@ private:
 	void WakeTasks (CTask **ppWaitListHead); // can be called from interrupt context
 	friend class CSynchronizationEvent;
 
-	void RemoveTask (CTask *pTask);
 	unsigned GetNextTask (void); // returns index into m_pTask or MAX_TASKS if no task was found
 
 private:

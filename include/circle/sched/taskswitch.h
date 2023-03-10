@@ -102,7 +102,7 @@ PACKED;
 
 #endif
 
-void TaskSwitch (TTaskRegisters *pOldRegs, TTaskRegisters *pNewRegs);
+void TaskSwitch (void);
 
 #ifdef __cplusplus
 }
