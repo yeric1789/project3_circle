@@ -511,5 +511,55 @@ void ContextSwitchOnIrqReturn_by_modifyingTaskContextSavedByIrqStub(TTaskRegiste
 	// TODO: Copy your working project 2 solution to here
 	// (TAs will publish project 2 solution later after 
 	// all lab sections have concluded project 2)
+	should_contextswith_on_irq_return = 0;
+	CScheduler* scheduler = CScheduler::Get();
+	CTask *pNext = scheduler->m_pCurrent;
+
+	// TODO: You should borrow all codes form Yield but make the following changes:
+	//   1. Use the variable `scheduler` above to fix any compilation errors.
+	//   2. At the end, **DO NOT** just call `TaskSwitch`. Instead, think about
+	//     how this function is supposed to assist the context switch in IRQStub (after you have
+	//     fully understood how IRQStub performs context switch), then write code here to
+	//     make the function do exactly what it is supposed to do.
+    while ((scheduler->m_nCurrent = scheduler->GetNextTask()) == MAX_TASKS)	// no task is ready
+	{
+		assert (scheduler->m_nTasks > 0);
+	}
+
+	assert (scheduler->m_nCurrent < MAX_TASKS);
+	pNext = scheduler->m_pTask[scheduler->m_nCurrent];
+	assert (pNext != 0);
+	if (scheduler->m_pCurrent == pNext)
+	{
+        should_contextswith_on_irq_return = 0;
+		return;
+	}
+	const char* curr_task_name = scheduler->m_pCurrent->GetName();
+
+	TTaskRegisters *pOldRegs = scheduler->m_pCurrent->GetRegs ();
+	scheduler->m_pCurrent = pNext;
+	TTaskRegisters *pNewRegs = pNext->GetRegs ();
+
+	if (scheduler->m_pTaskSwitchHandler != 0)
+	{
+		(*scheduler->m_pTaskSwitchHandler) (scheduler->m_pCurrent);
+	}
+
+	//assert (pOldRegs != 0);
+	assert (pNewRegs != 0);
+	//TaskSwitch (regs_saved_by_irq_stub, pNewRegs);
+    
+    should_contextswith_on_irq_return = 1;
+    
+    
+    //memcpy(pOldRegs,regs_saved_by_irq_stub,sizeof(TTaskRegisters));
+    //memcpy(regs_saved_by_irq_stub,pNewRegs,sizeof(TTaskRegisters));
+    *pOldRegs = *regs_saved_by_irq_stub;
+    *regs_saved_by_irq_stub = *pNewRegs;
+
+    //TaskSwitch (pOldRegs,regs_saved_by_irq_stub);
+    //TaskSwitch (regs_saved_by_irq_stub,pNewRegs);
+    
+	CLogger::Get ()->Write (FromScheduler, LogDebug, "Current task is task %s, will switch to task %s.", curr_task_name, pNext->GetName());
 
 }
