@@ -25,7 +25,7 @@
 	.globl	TaskSwitch
 TaskSwitch:
 	// TODO: delete the instruction below: 
-	bx	lr
+	//bx	lr
 
 	// TODO: Implement `TaskSwitch`
 	// Hint: 
@@ -42,6 +42,14 @@ TaskSwitch:
 	//	- Write codes here so that the assumptions are satisfied.
 	//	- Jump to __contextswitch_impl.
 
+	//save current pc (lr)
+	// r0 <- lr
+	// r1 <- cpsr
+	//switch to IRQ mode
+	//banked_lr <-r0
+	// spsr <- r1
+	// jump to __contextswitch_impl
+	
 #else
 
 	.globl	TaskSwitch
