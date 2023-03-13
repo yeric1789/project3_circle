@@ -27,6 +27,9 @@ In this project, we will try to combine cooperative multitasking (which we have 
 - Read the definition of [`Yield` in `scheduler.cpp`](../../lib/sched/scheduler.cpp#L60-L63).
 - Implement the [`TODO`s in `taskswitch.S`](../../lib/sched/taskswitch.S#L26-L43).
 	- **Note**: This step depends on project 2's solution so you need to first copy project 2's solution to [here](../../lib/exceptionstub.S#L127-L129) and [here](../../lib/sched/scheduler.cpp#L509-L511). 
+	- Hint: You probably will need to use the following assembly instructions:
+		- `cps` for switching into IRQ mode and disabling IRQ interrupt
+		- `mrs` for reading the value of `cpsr` register
 
 ### Problem 2: Identify and protect critical sections (in `scheduler.cpp`) in which IRQ interrupts should be temporarily disabled (because we don't want preemptive multitasking to occur in those critical sections).
 - Before solving problem 2, make sure you have done the following:
@@ -53,6 +56,7 @@ In this project, we will try to combine cooperative multitasking (which we have 
 		- If more than half of the tasks were removed, we will compact the array `m_pTask` and update `m_nTasks` (see [here](../../lib/sched/scheduler.cpp#L369-L389)).
 1. Find out what race condition could occur in `scheduler.cpp` (due to the above code design decisions) and cause the error we are seeing in problem 2. 
 1. Identify the critical section in `scheduler.cpp` where the race condition occurs, and write code to prevent that race condition from happening.
+	- Hint: You probably will need to call [`EnableIRQs` and `DisableIRQs`](../../include/circle/synchronize.h#L46-L47).
 
 ## What to submit on ELMS before your lab in the week of Apr 3 (you have 2 weeks + 1 week of spring break):
 1. A pdf that has:
