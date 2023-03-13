@@ -59,8 +59,6 @@
 
 /*
  * Undefined Instruction stub
- 
- 
  */
 	.globl UndefinedInstructionStub
 UndefinedInstructionStub:
@@ -78,34 +76,21 @@ UndefinedInstructionStub:
  */
 	.globl	IRQStub
 IRQStub:
-	// To understand IRQStub, you need to first understand the following topics: 
-	//   1. What is "IRQ mode"? Read "A2.2 Processor modes", "A2.3 Registers", 
-	//     "A2.4 General-purpose registers", and "A2.5 Program status registers" in [1].
-	//   2. What happens when the CPU enters IRQ mode? Read "A2.6.8 Interrupt 
-	//     request (IRQ) exception" in [1].
-	//   3. Where can I look up asssembly instructions? Use "A4.1 Alphabetical list of 
-	//     ARM instructions" in [1].
-
-	sub	lr, lr, #4			/* lr: return address */
-	stmfd	sp!, {r0-r3, r12, lr}		/* save r0-r3, r12 and return address */
+	sub	lr, lr, #4
+	stmfd	sp!, {r0-r3, r12, lr}
 #ifdef SAVE_VFP_REGS_ON_IRQ
-	sub	sp, sp, #4			/* correct stack (number of pushs must be even) */
-	vmrs	r0, fpscr			/* save VFP registers */
+	sub	sp, sp, #4
+	vmrs	r0, fpscr
 	stmfd	sp!, {r0}
 	vstmdb	sp!, {d0-d15}
 #if RASPPI >= 2 && defined (__FAST_MATH__)
 	vstmdb	sp!, {d16-d31}
 #endif
 #endif
-	ldr	r0, =IRQReturnAddress		/* store return address for profiling */
+	ldr	r0, =IRQReturnAddress
 	str	lr, [r0]
 	bl	InterruptHandler
 
-	// Added by TA.
-	// If should_contextswith_on_irq_return is set (which means 
-	//   this IRQ was triggered by a timer interrupt and the interrupt handler decided the interrupted 
-	//   task has used up its CPU time slice), we branch to `do_context_switch_on_irq_return`; 
-	//   otherwise, we simply restore registers saved at the beginning of IRQStub and return.
 	ldr	r0, =should_contextswith_on_irq_return
 	ldr	r0, [r0]
 	cmp	r0, #0
@@ -115,66 +100,33 @@ IRQStub:
 #if RASPPI >= 2 && defined (__FAST_MATH__)
 	vldmia	sp!, {d16-d31}
 #endif
-	vldmia	sp!, {d0-d15}			/* restore VFP registers */
+	vldmia	sp!, {d0-d15}
 	ldmfd	sp!, {r0}
 	vmsr	fpscr, r0
-	add	sp, sp, #4			/* correct stack */
+	add	sp, sp, #4
 #endif
-	ldmfd	sp!, {r0-r3, r12, pc}^		/* restore registers and return */
+	ldmfd	sp!, {r0-r3, r12, pc}^
 	
 do_context_switch_on_irq_return:
 #ifdef SAVE_VFP_REGS_ON_IRQ
 #if RASPPI >= 2 && defined (__FAST_MATH__)
 	vldmia	sp!, {d16-d31}
 #endif
-	vldmia	sp!, {d0-d15}			/* restore VFP registers */
+	vldmia	sp!, {d0-d15}
 	ldmfd	sp!, {r0}
 	vmsr	fpscr, r0
-	add	sp, sp, #4			/* correct stack */
+	add	sp, sp, #4
 #endif
-	ldmfd	sp!, {r0-r3, r12, lr}		/* restore registers but __DO NOT__ return */
-	// The above 6 instructions are identical to the 6 instructions 
-	//   before them except that the last instruction replaced "pc" with "lr"
-	//   and removed the ending caret "^". 
-	//
-	// This change is significant because `ldmfd sp!, {r0-r3, r12, pc}^`
-	//   triggers a return from IRQ mode to whatever mode that was running 
-	//   before the interrupt occurred, while `ldmfd sp!, {r0-r3, r12, lr}` does not.
-	//
-	// Specifically, `ldmfd sp!, {r0-r3, r12, pc}^` will copy spsr_irq 
-	//  into cpsr**, which effectively restores the processor state to the time before the 
-	//  interrupt occurred. If before the interrupt occurred, the interrupted task was running with IRQ
-	//  interrupt enabled, this act effectively re-enables IRQ interrupt! 
-	// 	
-	// * Read "A4.1.22 LDM (3)" and "A4.1.21 LDM (2)" in [1] for details.
-	// ** Read "A2.5 Program status registers" in [1] for details.
+	ldmfd	sp!, {r0-r3, r12, lr}
 
-
-	// TA's note: At this point, all registers (except pc) have been restored to 
-	//   the values they had when IRQStub just entered, meaning we now have access to the
-	//   full context of the interrupted task.
-
-	// Here is what we are going to do next:
-	//   1. We will save the context (registers) of the interrupted task on the stack.
-	//     - specifically, we need to save r0-r15, d0-d15, fpexc, and fpscr 
-	//       of the interrupted task. We don't need to save its cpsr for this project
-	//       because all tasks have the same cpsr (they all run in system mode with IRQ
-	//       interrupt enabled).
-	//   2. When we save the registers on the stack, we will organize them in a way such that
-	//      we can manipulate them later in C code as a `struct TTaskRegisters` (read the struct 
-	//      declaration in include/circle/sched/taskswitch.h).
-	//     - Specifically, this means, we need to store the registers declared in
-	//       `struct TTaskRegisters` consecutively on the stack, with the first field (fpexc)
-	//       stored at the lowest memory address and the last filed (pc) stored at
-	//       the highest memory address.
-
-	// Allocate space on stack for saving interrupted task's r15/pc.
+	.globl __contextswitch_impl
+__contextswitch_impl:
 	sub	sp, sp, #4
-	// Save interrupted task's r15/pc in alloated space
-	stmia	sp, {lr} // Why are we saving lr instead of pc? 
-	                 // Read "A2.6.8 Interrupt request (IRQ) exception" in [1]. 
+	stmia	sp, {lr}
 
-	// Allocate space on stack for saving interrupted task's r0-r14
+	// TODO: Copy your working project 2 solution to here
+	// (TAs will publish project 2 solution later after 
+	// all lab sections have concluded project 2)
 	sub sp, sp, #60
 	// TODO: Save interrupted task's r0-r14 in alloated space
 	stmia sp, {r0-r14}^
@@ -238,16 +190,8 @@ do_context_switch_on_irq_return:
 	// Deallocate space previosuly allocated for saving r0-r14
 	add	sp, sp, #60
 
-	// Restore next task's pc and at the same time deallocte the space 
-	//   previosuly allocated for saving it
-	ldmia	sp!, {pc}^ // NOTE: "^" is needed because 
-			   //   according to A4.1.22 LDM (3) in [1], "for an LDM 
-			   //   instruction that loads the PC, this indicates that 
-			   //   the SPSR of the current mode is copied to the CPSR", 
-			   //   which is needed when we return from IRQ mode back to 
-			   //   User/System mode.
 	
-
+	ldmia	sp!, {pc}^
 
 /*
  * FIQ stub
