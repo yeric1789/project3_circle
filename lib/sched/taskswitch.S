@@ -43,12 +43,18 @@ TaskSwitch:
 	//	- Jump to __contextswitch_impl.
 
 	//save current pc (lr)
-	// r0 <- lr
-	// r1 <- cpsr
+	mov   r0,lr
+	mrs   r1,cpsr
 	//switch to IRQ mode
 	//banked_lr <-r0
+    cpsid i,#0x12
 	// spsr <- r1
+
+    mov   lr,r0
+    msr  spsr_cxsf,r1
+
 	// jump to __contextswitch_impl
+    b __contextswitch_impl
 	
 #else
 
