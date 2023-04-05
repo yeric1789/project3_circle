@@ -43,10 +43,12 @@ CScheduler::CScheduler (void)
 
 	assert (s_pThis == 0);
 	s_pThis = this;
-
 	m_pCurrent = new CTask (0);		// main task currently running
 	assert (m_pCurrent != 0);
 	m_pCurrent->SetName("Main");
+	//Both addTasks and GetNextTask are accessing and modifying the m_pTask list
+	//Both of those areas are the critical sections
+	
 }
 
 CScheduler::~CScheduler (void)
@@ -219,7 +221,8 @@ void CScheduler::AddTask (CTask *pTask)
 	{
 		pTask->SetState(TaskStateNew);
 	}
-
+	//DisableIRQs();
+	//Disable the IRQ before the critical section
 	for (unsigned i = 0; i < m_nTasks; i++)
 	{
 		if (m_pTask[i] == 0)
@@ -229,12 +232,15 @@ void CScheduler::AddTask (CTask *pTask)
 		}
 	}
 
+
 	if (m_nTasks >= MAX_TASKS)
 	{
 		CLogger::Get ()->Write (FromScheduler, LogPanic, "System limit of tasks exceeded");
 	}
 
 	m_pTask[m_nTasks++] = pTask;
+	//EnableIRQ(); 
+	//Enable IRQ again once the edits are completed to the list
 }
 
 boolean CScheduler::BlockTask (CTask **ppWaitListHead, unsigned nMicroSeconds)
@@ -333,6 +339,8 @@ void CScheduler::WakeTasks (CTask **ppWaitListHead)
 
 unsigned CScheduler::GetNextTask (void)
 {
+	//DisableIRQs() 
+	//Diable the IRQ because m_pTask is being used in this area
 	// Added by TA: Making sure no active task is mistakenly considered removed.
 	for (unsigned i = m_nTasks; i <MAX_TASKS; i++) {
 		if (m_pTask[i] != 0) {
@@ -390,6 +398,9 @@ unsigned CScheduler::GetNextTask (void)
 	}
 	// CLogger::Get ()->Write (FromScheduler, LogDebug, "There are now %d tasks in the task array.", m_nTasks);
 
+	//EnableIRQs()
+	//there are noo usages of m_pTasks after this so after this point it is no longer in the critical section 
+	//We can enable the IRQs again
 	unsigned nTask = m_nCurrent < MAX_TASKS ? m_nCurrent : 0;
 
 	unsigned nTicks = CTimer::Get ()->GetClockTicks ();
