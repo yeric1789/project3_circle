@@ -221,7 +221,7 @@ void CScheduler::AddTask (CTask *pTask)
 	{
 		pTask->SetState(TaskStateNew);
 	}
-	//DisableIRQs();
+	DisableIRQs();
 	//Disable the IRQ before the critical section
 	for (unsigned i = 0; i < m_nTasks; i++)
 	{
@@ -239,7 +239,7 @@ void CScheduler::AddTask (CTask *pTask)
 	}
 
 	m_pTask[m_nTasks++] = pTask;
-	//EnableIRQ(); 
+	EnableIRQs(); 
 	//Enable IRQ again once the edits are completed to the list
 }
 
@@ -339,7 +339,7 @@ void CScheduler::WakeTasks (CTask **ppWaitListHead)
 
 unsigned CScheduler::GetNextTask (void)
 {
-	//DisableIRQs() 
+	DisableIRQs();
 	//Diable the IRQ because m_pTask is being used in this area
 	// Added by TA: Making sure no active task is mistakenly considered removed.
 	for (unsigned i = m_nTasks; i <MAX_TASKS; i++) {
@@ -476,7 +476,7 @@ unsigned CScheduler::GetNextTask (void)
 			break;
 		}
 	}
-
+	EnableIRQs();
 	return MAX_TASKS;
 }
 
@@ -572,6 +572,6 @@ void ContextSwitchOnIrqReturn_by_modifyingTaskContextSavedByIrqStub(TTaskRegiste
     //TaskSwitch (pOldRegs,regs_saved_by_irq_stub);
     //TaskSwitch (regs_saved_by_irq_stub,pNewRegs);
     
-	CLogger::Get ()->Write (FromScheduler, LogDebug, "Current task is task %s, will switch to task %s.", curr_task_name, pNext->GetName());
+	//CLogger::Get ()->Write (FromScheduler, LogDebug, "Current task is task %s, will switch to task %s.", curr_task_name, pNext->GetName());
 
 }
